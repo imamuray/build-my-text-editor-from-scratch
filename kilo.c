@@ -15,9 +15,12 @@ void enableRawMode() {
   struct termios raw = orig_termios;
 
   // c_flag: local flag
-  // ECHO フラグを反転させて論理積を取っている
+  // ECHO: 入力をエコーする
+  // ICANON: 入力を行単位に設定
+  // これらのフラグの論理和を取って否定する
   // → echo しないようにしてる
-  raw.c_lflag &= ~(ECHO);
+  // → 入力はバイト単位
+  raw.c_lflag &= ~(ECHO | ICANON);
 
   // TCSAFLUSH: fd に書き込まれたすべての出力が端末に送信された後で変更が実行される.
   // 加えて、受信したが読まれなかった入力は捨てられる.
