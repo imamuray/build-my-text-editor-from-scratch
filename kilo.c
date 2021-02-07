@@ -92,6 +92,12 @@ char editorReadkey() {
 
 /*** output ***/
 
+void editorDrawRows() {
+  for (int y = 0; y < 24; y++) {
+    write(STDOUT_FILENO, "~\r\n", 3);
+  }
+}
+
 // VT100 のマニュアル
 // Digital VT100 User Guide: Programmer Information
 // https://vt100.net/docs/vt100-ug/chapter3.html
@@ -105,6 +111,9 @@ void editorRefreshScreen() {
    * H: Cursor Position
    */
   write(STDOUT_FILENO, "\x1b[2J", 4);
+  write(STDOUT_FILENO, "\x1b[H", 3);
+
+  editorDrawRows();
   write(STDOUT_FILENO, "\x1b[H", 3);
 }
 
