@@ -29,6 +29,9 @@ struct editorConfig E;
 
 /*** terminal ***/
 
+/**
+ * エラーメッセージを表示してプログラムを終了する
+ */
 void die(const char *s) {
   write(STDOUT_FILENO, "\x1b[2J", 4);
   write(STDOUT_FILENO, "\x1b[H", 3);
@@ -88,6 +91,9 @@ void enableRawMode() {
   if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1) die("tcsetattr");
 }
 
+/**
+ * ターミナルから1文字読み取る
+ */
 char editorReadkey() {
   int nread;
   char c;
@@ -97,6 +103,9 @@ char editorReadkey() {
   return c;
 }
 
+/**
+ * rows, cols に現在のカーソル位置を設定する
+ */
 int getCursorPosition(int *rows, int *cols) {
   char buf[32];
   unsigned int i = 0;
@@ -112,6 +121,7 @@ int getCursorPosition(int *rows, int *cols) {
     if (buf[i] == 'R') break;
     i++;
   }
+  // 最後の 'R' を落とす
   buf[i] = '\0';
 
   // "ESC [ line ; column" をパースする
@@ -122,6 +132,9 @@ int getCursorPosition(int *rows, int *cols) {
   return 0;
 }
 
+/**
+ * rows, cols にウィンドウサイズを設定する
+ */
 int getWindowSize(int *rows, int *cols) {
   struct winsize ws;
 
@@ -141,6 +154,9 @@ int getWindowSize(int *rows, int *cols) {
 
 /*** output ***/
 
+/**
+ * 画面の一番左側1列を '~' で埋める
+ */
 void editorDrawRows() {
   for (int y = 0; y < E.screenrows; y++) {
     write(STDOUT_FILENO, "~\r\n", 3);
@@ -168,6 +184,9 @@ void editorRefreshScreen() {
 
 /*** input ***/
 
+/**
+ * 押したキーによって動作を分岐させる
+ */
 void editorProcessKeypress() {
   char c = editorReadkey();
 
