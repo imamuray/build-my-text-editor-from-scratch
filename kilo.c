@@ -82,6 +82,18 @@ char editorReadkey() {
   return c;
 }
 
+/*** output ***/
+
+void editorRefreshScreen() {
+  /* x1b (27): escape charactor
+   * x1b[: escape sequence
+   * J: Erase In Display command
+   *    params: 0, 1, 2
+   * 2J: Erase all of the display
+   */
+  write(STDOUT_FILENO, "\x1b[2J", 4);
+}
+
 /*** input ***/
 
 void editorProcessKeypress() {
@@ -100,6 +112,7 @@ int main() {
   enableRawMode();
 
   while (1) {
+    editorRefreshScreen();
     editorProcessKeypress();
   }
   return 0;
