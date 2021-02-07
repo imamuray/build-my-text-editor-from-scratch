@@ -97,11 +97,41 @@ char editorReadkey() {
   return c;
 }
 
+int getCursorPosition(int *rows, int *cols) {
+  char buf[32];
+  unsigned int i = 0;
+
+  // n: Device Status Report
+  // 6: command from host
+  // カーソル位置を取得する
+  if (write(STDOUT_FILENO, "\x1b[6n", 4) != 4) return -1;
+  // Cursor Position Report が返ってくる
+  // ESC [ line ; column R
+  while (i < sizeof(buf) - 1) {
+    if (read(STDIN_FILENO, &buf[i], 1) != 1) break;
+    if (buf[i] == 'R') break;
+    i++;
+  }
+  buf[i] = '\0';
+
+  // "ESC [ line ; column" をパースする
+  if (buf[0] != '\x1b' || buf[1] != '[') return 1;
+  // sscanf() は入力データの個数を返す
+  if (sscanf(&buf[2], "%d;%d", rows, cols) != 2) return -1;
+
+  return 0;
+}
+
 int getWindowSize(int *rows, int *cols) {
   struct winsize ws;
 
   if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == -1 || ws.ws_col == 0) {
-    return -1;
+    // ioctrl() はすべてのシステムでサイズをとってこれるとは限らないので別の方法
+    // ESC [ Pn C: Cursor Forward
+    // ESC [ Pn B: Cursor Down
+    // カーソル移動には H もあるが、ウィンドウサイズ以上の動作は未定義なので使用していない
+    if (write(STDOUT_FILENO, "\x1b[999C\x1b[999B", 12) != 12) return -1;
+    return getCursorPosition(rows, cols);
   }
 
   *cols = ws.ws_col;
