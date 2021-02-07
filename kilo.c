@@ -1,3 +1,8 @@
+/*
+ * 参考サイト: Build Your Own Text Editor
+ * https://viewsourcecode.org/snaptoken/kilo/index.html
+ */
+
 /*** includes ***/
 
 #include <ctype.h>
@@ -84,14 +89,20 @@ char editorReadkey() {
 
 /*** output ***/
 
+// VT100 のマニュアル
+// Digital VT100 User Guide: Programmer Information
+// https://vt100.net/docs/vt100-ug/chapter3.html
+
 void editorRefreshScreen() {
   /* x1b (27): escape charactor
    * x1b[: escape sequence
    * J: Erase In Display command
    *    params: 0, 1, 2
    * 2J: Erase all of the display
+   * H: Cursor Position
    */
   write(STDOUT_FILENO, "\x1b[2J", 4);
+  write(STDOUT_FILENO, "\x1b[H", 3);
 }
 
 /*** input ***/
