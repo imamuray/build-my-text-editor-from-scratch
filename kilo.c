@@ -16,6 +16,9 @@ void enableRawMode() {
 
   struct termios raw = orig_termios;
 
+  // c_iflag: input
+  // IXON: 出力の XON/XOFF フロー制御を有効にする
+  // → ctrl-s(XON), ctrl-q(XOFF) を無効にする
   // c_flag: local flag
   // ECHO: 入力をエコーする
   // ICANON: 入力を行単位に設定
@@ -24,6 +27,7 @@ void enableRawMode() {
   // → echo しないようにしてる
   // → 入力はバイト単位
   // → シグナルが発生しなくなる、つまりctrl-c, ctrl-z が入力されても動く
+  raw.c_iflag &= ~(IXON);
   raw.c_lflag &= ~(ECHO | ICANON | ISIG);
 
   // TCSAFLUSH: fd に書き込まれたすべての出力が端末に送信された後で変更が実行される.
