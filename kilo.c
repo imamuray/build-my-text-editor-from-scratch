@@ -36,8 +36,9 @@ void enableRawMode() {
    * → ctrl-x を入力できるようにする
    * → シグナルが発生しなくなる、つまりctrl-c, ctrl-z が入力されても動く
    */
-  raw.c_iflag &= ~(ICRNL | IXON);
+  raw.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
   raw.c_oflag &= ~(OPOST);
+  raw.c_cflag |= (CS8);
   raw.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
 
   // TCSAFLUSH: fd に書き込まれたすべての出力が端末に送信された後で変更が実行される.
