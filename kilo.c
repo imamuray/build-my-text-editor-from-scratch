@@ -22,13 +22,15 @@ void enableRawMode() {
   // c_flag: local flag
   // ECHO: 入力をエコーする
   // ICANON: 入力を行単位に設定
+  // IEXTEN: 実装依存の入力処理を有効にする
   // ISIG: INTR, QUIT, SUSP, DSUSP の文字を受信した時、対応するシグナルを 発生させる
   // これらのフラグの論理和を取って否定する
   // → echo しないようにしてる
   // → 入力はバイト単位
+  // → ctrl-x を入力できるようにする
   // → シグナルが発生しなくなる、つまりctrl-c, ctrl-z が入力されても動く
   raw.c_iflag &= ~(IXON);
-  raw.c_lflag &= ~(ECHO | ICANON | ISIG);
+  raw.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
 
   // TCSAFLUSH: fd に書き込まれたすべての出力が端末に送信された後で変更が実行される.
   // 加えて、受信したが読まれなかった入力は捨てられる.
