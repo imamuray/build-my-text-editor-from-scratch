@@ -10,6 +10,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/ioctl.h>
 #include <termios.h>
 #include <unistd.h>
@@ -153,19 +154,47 @@ bool getWindowSize(int *rows, int *cols) {
   return true;
 }
 
+/*** append buffer ***/
+
+typedef struct {
+  char *string;
+  int length;
+} buffer_t;
+
+#define BUFFER_INIT {NULL, 0}
+
+/**
+ * src->length + length のメモリを確保してから、
+ * src に string を加える
+ */
+void bufferAppend(buffer_t *src, const char *string) {
+  int length = strlen(string);
+  char *new = realloc(src->string, src->length + length);
+
+  // 失敗を呼び出し元に知らせなくていいんですか???
+  if (new == NULL) return;
+  memcpy(&new[src->length], string, length);
+  src->string = new;
+  src->length += length;
+}
+
+void bufferFree(buffer_t *buffer) {
+  free(buffer->string);
+}
+
 /*** output ***/
 
 /**
  * 画面の一番左側1列を '~' で埋める
  */
-void editorDrawRows() {
+void editorDrawRows(buffer_t *buffer) {
   for (int y = 0; y < E.screenrows; y++) {
     if (y != E.screenrows - 1) {
-      write(STDOUT_FILENO, "~\r\n", 3);
+      bufferAppend(buffer, "~\r\n");
     } else {
       // 最後の行にも "~" を表示するため
       // 最後も改行してしまうと、端末が改行文字出力のために上にスクロールしてしまう
-      write(STDOUT_FILENO, "~", 1);
+      bufferAppend(buffer, "~");
     }
   }
 }
@@ -175,6 +204,7 @@ void editorDrawRows() {
 // https://vt100.net/docs/vt100-ug/chapter3.html
 
 void editorRefreshScreen() {
+  buffer_t buffer = BUFFER_INIT;
   /* x1b (27): escape charactor
    * x1b[: escape sequence
    * J: Erase In Display command
@@ -182,11 +212,18 @@ void editorRefreshScreen() {
    * 2J: Erase all of the display
    * H: Cursor Position
    */
-  write(STDOUT_FILENO, "\x1b[2J", 4);
-  write(STDOUT_FILENO, "\x1b[H", 3);
+  const char ERASE_DISPLAY[] = "\x1b[2J";
+  const char RETURN_CURSOR_TO_HOME[] = "\x1b[H";
 
-  editorDrawRows();
-  write(STDOUT_FILENO, "\x1b[H", 3);
+  bufferAppend(&buffer, ERASE_DISPLAY);
+  bufferAppend(&buffer, RETURN_CURSOR_TO_HOME);
+
+  editorDrawRows(&buffer);
+
+  bufferAppend(&buffer, RETURN_CURSOR_TO_HOME);
+
+  write(STDOUT_FILENO, buffer.string, buffer.length);
+  bufferFree(&buffer);
 }
 
 /*** input ***/
