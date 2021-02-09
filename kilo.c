@@ -188,13 +188,16 @@ void bufferFree(buffer_t *buffer) {
  * 画面の一番左側1列を '~' で埋める
  */
 void editorDrawRows(buffer_t *buffer) {
+  const char ERASE_LINE[] = "\x1b[K";
+
   for (int y = 0; y < E.screenrows; y++) {
-    if (y != E.screenrows - 1) {
-      bufferAppend(buffer, "~\r\n");
-    } else {
+    bufferAppend(buffer, "~");
+    bufferAppend(buffer, ERASE_LINE);
+
+    if (y < E.screenrows - 1) {
       // 最後の行にも "~" を表示するため
       // 最後も改行してしまうと、端末が改行文字出力のために上にスクロールしてしまう
-      bufferAppend(buffer, "~");
+      bufferAppend(buffer, "\r\n");
     }
   }
 }
@@ -204,24 +207,16 @@ void editorDrawRows(buffer_t *buffer) {
 // https://vt100.net/docs/vt100-ug/chapter3.html
 
 void editorRefreshScreen() {
-  buffer_t buffer = BUFFER_INIT;
-  /* x1b (27): escape charactor
-   * x1b[: escape sequence
-   * J: Erase In Display command
-   *    params: 0, 1, 2
-   * 2J: Erase all of the display
-   * H: Cursor Position
-   */
   const char CURSOR_VISIBLE[] = "\x1b[?25h";
   const char CURSOR_INVISIBLE[] = "\x1b[?25l";
-  const char ERASE_DISPLAY[] = "\x1b[2J";
   const char RETURN_CURSOR_TO_HOME[] = "\x1b[H";
+
+  buffer_t buffer = BUFFER_INIT;
 
   // リフレッシュ時にカーソルが画面中央でちらつく可能性があるので、一旦見えなくする
   bufferAppend(&buffer, CURSOR_INVISIBLE);
 
   // 画面リフレッシュ開始
-  bufferAppend(&buffer, ERASE_DISPLAY);
   bufferAppend(&buffer, RETURN_CURSOR_TO_HOME);
 
   editorDrawRows(&buffer);
