@@ -17,6 +17,8 @@
 
 /*** defines ***/
 
+#define KILO_VERSION "0.0.1"
+
 #define CTRL_KEY(k) ((k) & 0x1f)
 
 /*** data ***/
@@ -184,14 +186,40 @@ void bufferFree(buffer_t *buffer) {
 
 /*** output ***/
 
+void welcomeMessage(char *message, int limit) {
+  char welcome[64];
+  int welcomelen = snprintf(welcome, sizeof(welcome), "Kilo editor -- version %s", KILO_VERSION);
+  printf("len: %d\n", welcomelen);
+  if (welcomelen > limit) {
+    strncpy(message, welcome, limit);
+    message[limit] = '\0';
+  } else {
+    strncpy(message, welcome, welcomelen);
+    message[welcomelen] = '\0';
+  }
+}
+
 /**
  * 画面の一番左側1列を '~' で埋める
  */
 void editorDrawRows(buffer_t *buffer) {
   const char ERASE_LINE[] = "\x1b[K";
-
+  char welcome[64];
+  welcomeMessage(welcome, E.screenclos);
+  
   for (int y = 0; y < E.screenrows; y++) {
-    bufferAppend(buffer, "~");
+    if (y == E.screenrows / 3) {
+      int padding = (E.screenclos - strlen(welcome)) / 2;
+      if (padding > 0) {
+        bufferAppend(buffer, "~");
+        padding--;
+        while (padding--) bufferAppend(buffer, " ");
+      }
+      bufferAppend(buffer, welcome);
+    } else {
+      bufferAppend(buffer, "~");
+    }
+
     bufferAppend(buffer, ERASE_LINE);
 
     if (y < E.screenrows - 1) {
