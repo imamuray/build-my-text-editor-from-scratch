@@ -212,9 +212,15 @@ void editorRefreshScreen() {
    * 2J: Erase all of the display
    * H: Cursor Position
    */
+  const char CURSOR_VISIBLE[] = "\x1b[?25h";
+  const char CURSOR_INVISIBLE[] = "\x1b[?25l";
   const char ERASE_DISPLAY[] = "\x1b[2J";
   const char RETURN_CURSOR_TO_HOME[] = "\x1b[H";
 
+  // リフレッシュ時にカーソルが画面中央でちらつく可能性があるので、一旦見えなくする
+  bufferAppend(&buffer, CURSOR_INVISIBLE);
+
+  // 画面リフレッシュ開始
   bufferAppend(&buffer, ERASE_DISPLAY);
   bufferAppend(&buffer, RETURN_CURSOR_TO_HOME);
 
@@ -222,6 +228,10 @@ void editorRefreshScreen() {
 
   bufferAppend(&buffer, RETURN_CURSOR_TO_HOME);
 
+  // 画面リフレッシュが終了したのでカーソルを見えるようにする
+  bufferAppend(&buffer, CURSOR_VISIBLE);
+
+  // バッファをすべて書きだす
   write(STDOUT_FILENO, buffer.string, buffer.length);
   bufferFree(&buffer);
 }
