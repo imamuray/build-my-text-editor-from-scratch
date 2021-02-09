@@ -24,6 +24,7 @@
 /*** data ***/
 
 struct editorConfig {
+  int cursorX, cursorY;
   int screenrows;
   int screenclos;
   struct termios orig_termios;
@@ -189,7 +190,6 @@ void bufferFree(buffer_t *buffer) {
 void welcomeMessage(char *message, int limit) {
   char welcome[64];
   int welcomelen = snprintf(welcome, sizeof(welcome), "Kilo editor -- version %s", KILO_VERSION);
-  printf("len: %d\n", welcomelen);
   if (welcomelen > limit) {
     strncpy(message, welcome, limit);
     message[limit] = '\0';
@@ -249,7 +249,12 @@ void editorRefreshScreen() {
 
   editorDrawRows(&buffer);
 
-  bufferAppend(&buffer, RETURN_CURSOR_TO_HOME);
+  // カーソル位置を更新
+  // パラメータに渡す座標は 1 から開始なので + 1 をする
+  char cursor_position[32];
+  snprintf(cursor_position, sizeof(cursor_position),
+    "\x1b[%d;%dH", E.cursorY + 1, E.cursorX + 1);
+  bufferAppend(&buffer, cursor_position);
 
   // 画面リフレッシュが終了したのでカーソルを見えるようにする
   bufferAppend(&buffer, CURSOR_VISIBLE);
@@ -260,6 +265,23 @@ void editorRefreshScreen() {
 }
 
 /*** input ***/
+
+void editorMoveCursor(char key) {
+  switch (key) {
+    case 'h':
+      E.cursorX--;
+      break;
+    case 'l':
+      E.cursorX++;
+      break;
+    case 'k':
+      E.cursorY--;
+      break;
+    case 'j':
+      E.cursorY++;
+      break;
+  }
+}
 
 /**
  * 押したキーによって動作を分岐させる
@@ -273,12 +295,21 @@ void editorProcessKeypress() {
       write(STDOUT_FILENO, "\x1b[H", 3);
       exit(0);
       break;
+    
+    case 'h':
+    case 'l':
+    case 'k':
+    case 'j':
+      editorMoveCursor(c);
+      break;
   }
 }
 
 /*** init ***/
 
 void initEditor() {
+  E.cursorX = 0;
+  E.cursorY = 0;
   if (!getWindowSize(&E.screenrows, &E.screenclos)) die("getWindowSize");
 }
 
