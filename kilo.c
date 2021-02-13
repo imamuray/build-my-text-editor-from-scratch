@@ -5,6 +5,10 @@
 
 /*** includes ***/
 
+#define _DEFAULT_SOURCE
+#define _BSD_SOURCE
+#define _GNU_SOURCE
+
 #include <ctype.h>
 #include <errno.h>
 #include <stdbool.h>
@@ -223,17 +227,27 @@ bool getWindowSize(int *rows, int *cols) {
 
 /*** file i/o ***/
 
-void editorOpen() {
-  char *line = "Hello, world!";
-  // ここ ssize_t 使う必要ある？
-  ssize_t linelen = strlen(line);
+void editorOpen(char *filename) {
+  FILE *fp = fopen(filename, "r");
+  if (!fp) die("fopen");
 
-  // malloc 使うならエラー処理しろよ
-  E.row.size = linelen;
-  E.row.chars = malloc(linelen + 1);
-  memcpy(E.row.chars, line, linelen);
-  E.row.chars[linelen] = '\0';
-  E.numrows = 1;
+  char *line = NULL;
+  size_t linecapacity = 0;
+  ssize_t linelen = getline(&line, &linecapacity, fp);
+  if (linelen != -1) {
+    while (linelen > 0 &&
+      (line[linelen - 1] == '\n' || line[linelen - 1] == '\r')) linelen--;
+    
+    // malloc 使うならエラー処理しろよ
+    E.row.size = linelen;
+    E.row.chars = malloc(linelen + 1);
+    memcpy(E.row.chars, line, linelen);
+    E.row.chars[linelen] = '\0';
+    E.numrows = 1;
+  }
+
+  free(line);
+  fclose(fp);
 }
 
 /*** append buffer ***/
@@ -297,7 +311,7 @@ void editorDrawRows(buffer_t *buffer) {
         bufferAppend(buffer, linebuf);
       } 
       bufferAppend(buffer, E.row.chars);
-    } else if (y == E.screenrows / 3) {
+    } else if (E.numrows == 0 && y == E.screenrows / 3) {
       int padding = (E.screenclos - strlen(welcome)) / 2;
       if (padding > 0) {
         bufferAppend(buffer, "~");
@@ -429,10 +443,12 @@ void initEditor() {
   if (!getWindowSize(&E.screenrows, &E.screenclos)) die("getWindowSize");
 }
 
-int main() {
+int main(int argc, char *argv[]) {
   enableRawMode();
   initEditor();
-  editorOpen();
+  if (argc >= 2) {
+    editorOpen(argv[1]);
+  }
 
   while (1) {
     editorRefreshScreen();
