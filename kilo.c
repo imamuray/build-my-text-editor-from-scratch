@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
+#include <sys/types.h>
 #include <termios.h>
 #include <unistd.h>
 
@@ -35,10 +36,21 @@ enum editorKey {
 
 /*** data ***/
 
+/**
+ * Editor row
+ * ある行のテキストとその文字数を保持する
+ */
+typedef struct erow {
+  int size;
+  char *chars;
+} erow;
+
 struct editorConfig {
   int cursorX, cursorY;
   int screenrows;
   int screenclos;
+  int numrows;
+  erow row;
   struct termios orig_termios;
 };
 
@@ -209,6 +221,21 @@ bool getWindowSize(int *rows, int *cols) {
   return true;
 }
 
+/*** file i/o ***/
+
+void editorOpen() {
+  char *line = "Hello, world!";
+  // ここ ssize_t 使う必要ある？
+  ssize_t linelen = strlen(line);
+
+  // malloc 使うならエラー処理しろよ
+  E.row.size = linelen;
+  E.row.chars = malloc(linelen + 1);
+  memcpy(E.row.chars, line, linelen);
+  E.row.chars[linelen] = '\0';
+  E.numrows = 1;
+}
+
 /*** append buffer ***/
 
 typedef struct {
@@ -260,7 +287,17 @@ void editorDrawRows(buffer_t *buffer) {
   welcomeMessage(welcome, E.screenclos);
   
   for (int y = 0; y < E.screenrows; y++) {
-    if (y == E.screenrows / 3) {
+    if (y < E.numrows) {
+      // このへんの処理共通化したい…
+      int len = E.row.size;
+      char linebuf[128];
+      if (len > E.screenclos) {
+        strncpy(linebuf, E.row.chars, E.screenclos);
+        linebuf[E.screenclos] = '\0';
+        bufferAppend(buffer, linebuf);
+      } 
+      bufferAppend(buffer, E.row.chars);
+    } else if (y == E.screenrows / 3) {
       int padding = (E.screenclos - strlen(welcome)) / 2;
       if (padding > 0) {
         bufferAppend(buffer, "~");
@@ -388,12 +425,14 @@ void editorProcessKeypress() {
 void initEditor() {
   E.cursorX = 0;
   E.cursorY = 0;
+  E.numrows = 0;
   if (!getWindowSize(&E.screenrows, &E.screenclos)) die("getWindowSize");
 }
 
 int main() {
   enableRawMode();
   initEditor();
+  editorOpen();
 
   while (1) {
     editorRefreshScreen();
