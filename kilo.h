@@ -13,6 +13,26 @@
 #include <termios.h>
 #include <unistd.h>
 
+/*** defines ***/
+
+#define KILO_VERSION "0.0.1"
+
+#define CTRL_KEY(k) ((k) & 0x1f)
+
+enum editorKey {
+  ARROW_LEFT = 1000,
+  ARROW_RIGHT,
+  ARROW_UP,
+  ARROW_DOWN,
+  DELETE_KEY,
+  HOME_KEY,
+  END_KEY,
+  PAGE_UP,
+  PAGE_DOWN
+};
+
+/*** data ***/
+
 /**
  * Editor row
  * ある行のテキストとその文字数を保持する
