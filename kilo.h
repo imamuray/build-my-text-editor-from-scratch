@@ -1,3 +1,6 @@
+#ifndef KILO_H
+#define KILO_H
+
 #define _DEFAULT_SOURCE
 #define _BSD_SOURCE
 #define _GNU_SOURCE
@@ -54,3 +57,5 @@ struct editorConfig {
 struct editorConfig E;
 
 void die(const char *s);
+
+#endif
