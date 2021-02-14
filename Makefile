@@ -1,15 +1,18 @@
 PROGRAM = kilo
-SRC = kilo.c
-OBJ = $(SRC:%.c=%.o)
+OBJS = kilo.o terminal.o
 
 CFLAGS = -Wall -Wextra -pedantic -std=c99 
 
-$(PROGRAM): $(OBJ)
-	$(CC) -o $@ $<
+$(PROGRAM): $(OBJS)
+	$(CC) -o $@ $^
 
 .c.o:
 	$(CC) -c $(CFLAGS) $<
 
 .PHONY: clean
 clean:
-	rm -f $(PROGRAM) $(OBJ)
+	rm -f $(PROGRAM) $(OBJS)
+
+# 各種ファイルの依存関係
+kilo.o: kilo.c kilo.h
+terminal.o: terminal.c terminal.h
