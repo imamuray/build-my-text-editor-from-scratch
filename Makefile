@@ -1,5 +1,5 @@
 PROGRAM = kilo
-OBJS = kilo.o terminal.o fileIO.o input.o
+OBJS = kilo.o terminal.o fileIO.o input.o output.o
 
 CFLAGS = -Wall -Wextra -pedantic -std=c99 
 
@@ -18,3 +18,4 @@ kilo.o: kilo.c kilo.h
 terminal.o: terminal.c terminal.h
 fileIO.o: fileIO.c fileIO.h
 input.o: input.c input.h
+output.o: output.c output.h
