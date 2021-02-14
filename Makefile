@@ -1,5 +1,5 @@
 PROGRAM = kilo
-OBJS = kilo.o terminal.o
+OBJS = kilo.o terminal.o fileIO.o
 
 CFLAGS = -Wall -Wextra -pedantic -std=c99 
 
@@ -16,3 +16,4 @@ clean:
 # 各種ファイルの依存関係
 kilo.o: kilo.c kilo.h
 terminal.o: terminal.c terminal.h
+fileIO.o: fileIO.c fileIO.h
